@@ -5,6 +5,7 @@
         "module": "NodeNext",
         "strictNullChecks": true,
         "noImplicitAny": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "sourceMap": true
     }
 }
