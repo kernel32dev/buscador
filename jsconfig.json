@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "nodenext",
+        "target": "ESNext",
+        "module": "NodeNext",
+        "strictNullChecks": true,
+        "noImplicitAny": true
+    }
+}
