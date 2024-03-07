@@ -1,4 +1,3 @@
-//@ts-check
 
 /**
  * cria uma função que executa funções asíncronas,
@@ -6,21 +5,20 @@
  *
  * caso `max` tarefas já estejam executando, a proxima tarefa vai ter que esperar uma delas terminar para poder começar
  *
- * @param {number} max - um inteiro maior que zero ou infinito
- * @returns {<T>(promise: () => Promise<T>) => Promise<T>}
+ * @param max - um inteiro maior que zero ou infinito
+ * @returns - uma função que recebe as funções asíncronas
  */
-export function semaphore(max) {
+export function semaphore(max: number): <T>(promise: () => Promise<T>) => Promise<T> {
     if (max < 0) throw new Error("um semáforo não pode ter um limite negativo");
     if (max == 0) throw new Error("um semáforo não pode ter um limite zero");
     if (max == Infinity) return x => x();
     if (Number.isNaN(max)) throw new Error("um semáforo não pode ter um limite NaN");
     if (!Number.isSafeInteger(max)) throw new Error("um semáforo não pode ter um limite fracional");
 
-    /** se for um número, recursos sobrando, ou a lista de funções esperando se for um array @type {number | (() => void)[]} */
-    let state = max;
+    /** se for um número, recursos sobrando, ou a lista de funções esperando se for um array */
+    let state: number | (() => void)[] = max;
 
-    /** @type {<T>(arg: T) => T} */
-    const regain = x => {
+    const regain = <T>(x: T) => {
         if (typeof state === "number") {
             state++;
         } else if (state.length !== 0) {

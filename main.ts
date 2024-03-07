@@ -1,4 +1,3 @@
-//@ts-check
 
 import { crawl_collect } from "./crawler.js";
 

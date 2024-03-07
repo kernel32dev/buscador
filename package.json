@@ -1,9 +1,12 @@
 {
     "type": "module",
     "dependencies": {
-        "cheerio": "^1.0.0-rc.12"
+        "cheerio": "^1.0.0-rc.12",
+        "@types/node": "^20.11.25",
+        "typescript": "^5.4.2"
     },
     "scripts": {
-        "dev": "node main.js"
+        "dev": "npx tsc && node main.js",
+        "dev:watch": "npx tsc --watch"
     }
 }
