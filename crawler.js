@@ -1,16 +1,17 @@
 //@ts-check
 
 import { load } from "cheerio";
+import { semaphore } from "./semaphore.js";
 
 /** encontra todas as páginas e lista elas em um array
  *
  * @param {string} entry_point 
- * @param {number} [max_depth]
+ * @param {{max_depth?: number, max_paralel?: number}} [options]
  */
-export async function crawl_collect(entry_point, max_depth) {
+export async function crawl_collect(entry_point, options) {
     /** @type {{url: string, $: import("cheerio").CheerioAPI}[]} */
     let list = [];
-    await crawl(entry_point, (url, $) => list.push({url, $}), max_depth);
+    await crawl(entry_point, (url, $) => list.push({url, $}), options);
     return list;
 }
 
@@ -18,10 +19,14 @@ export async function crawl_collect(entry_point, max_depth) {
  *
  * @param {string} entry_point 
  * @param {(url: string, html: import("cheerio").CheerioAPI) => void} callback 
- * @param {number} [max_depth]
+ * @param {{max_depth?: number, max_paralel?: number}} [options]
  */
-export async function crawl(entry_point, callback, max_depth) {
+export async function crawl(entry_point, callback, options = {}) {
+    let max_depth = options.max_depth ?? Infinity;
+    let max_paralel = options.max_paralel ?? Infinity;
+
     if (max_depth == 0) return;
+    let sph = semaphore(max_paralel);
 
     /** o conjunto de todos os links já visitados @type {Set<string>} */
     let found = new Set();
@@ -43,7 +48,7 @@ export async function crawl(entry_point, callback, max_depth) {
         found.add(url);
 
         // baixa o html
-        let html = await download_html(url);
+        let html = await sph(() => (console.log(url), download_html(url)));
         if (html == "") return;
 
         // parsa o html
