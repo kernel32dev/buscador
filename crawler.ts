@@ -2,17 +2,19 @@
 import { CheerioAPI, load } from "cheerio";
 
 type CrawlerOptions = { max_depth?: number, max_pages?: number };
-type CrawlerCallback = (url: string, html: CheerioAPI) => void;
-
+type CrawlerCallback = ($: Crawled) => void;
+type Crawled = CheerioAPI & { url: string, links: string[] };
 /** encontra todas as páginas e lista elas em um array */
 export async function crawl_collect(entry_point: string, options?: CrawlerOptions) {
-    let list: { url: string, $: CheerioAPI }[] = [];
-    await crawl(entry_point, (url, $) => list.push({ url, $ }), options);
+    let list: Crawled[] = [];
+    await crawl_iter(entry_point, $ => list.push($), options);
     return list;
 }
 
-/** executa um callback para cada pagina encontrada a partir de um link */
-export async function crawl(entry_point: string, callback: CrawlerCallback, options: CrawlerOptions = {}) {
+/** executa um callback para cada pagina encontrada a partir de um link
+ *
+ * você pode modificar a propiedade links de dentro do callback para escolher as próximas páginas a serem obtidas */
+export async function crawl_iter(entry_point: string, callback: CrawlerCallback, options: CrawlerOptions = {}) {
     let max_depth = options.max_depth ?? Infinity;
     let max_pages = options.max_pages ?? Infinity;
 
@@ -30,7 +32,7 @@ export async function crawl(entry_point: string, callback: CrawlerCallback, opti
     /** função recursiva que trata o download e analise de um link */
     async function crawl_one(url: string, depth: number) {
 
-        let processed_url = preprocess_url(url);
+        let processed_url = crawler_url(url);
         if (processed_url === null) return;
         url = processed_url;
 
@@ -58,17 +60,13 @@ export async function crawl(entry_point: string, callback: CrawlerCallback, opti
         // extrai os links e processa links relativos
         let links = document("a")
             .get()
-            .map(x => {
-                try {
-                    return new URL(x.attribs.href, url).toString()
-                } catch (e) {
-                    return "";
-                }
-            })
-            .filter(x => x.length != 0)
+            .map(x => crawler_url(x.attribs.href, url))
+            .filter(x => x) as string[];
 
-        // chama o callback com a url e o html parsado
-        callback(url, document);
+        let $: Crawled = Object.assign(document, {url, links});
+
+        // chama o callback com a página
+        callback($);
 
         // recursivamente trata todos os links e espera eles terminarem
         // mas apenas se a profundidade deixar
@@ -78,9 +76,10 @@ export async function crawl(entry_point: string, callback: CrawlerCallback, opti
     }
 }
 
-function preprocess_url(url: string): string | null {
+/** processa um link, possivelmente de acordo com uma base para resolver links relativos */
+export function crawler_url(url: string, base?: string): string | null {
     try {
-        let obj = new URL(url);
+        let obj = new URL(url, base);
 
         // remove o hash
         obj.hash = "";
