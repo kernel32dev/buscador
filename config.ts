@@ -22,6 +22,12 @@ export const config: {
     reward_date: number,
     /** quantos pontos uma página ganha por ano de idade */
     reward_year_age: number,
+    /** o caminho para a pasta do cache */
+    cache_path: string,
+    /** o tempo em ms até que o cache deve ser re-lido */
+    cache_expiration_ms: number,
+    /** modo offline, apenas ler do cache, nunca fazer nenhum request */
+    offline_mode: boolean,
 } = {
     reward_linked: 20,
     reward_self_link: -20,
@@ -34,4 +40,7 @@ export const config: {
     reward_term_on_anchor: 2,
     reward_date: 30,
     reward_year_age: -5,
+    cache_path: './cache/',
+    cache_expiration_ms: 1000 * 60 * 60, // 1 hora
+    offline_mode: false,
 };

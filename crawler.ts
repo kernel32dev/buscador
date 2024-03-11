@@ -1,5 +1,6 @@
-
 import { CheerioAPI, load } from "cheerio";
+import { promises as fs } from "fs";
+import { config } from "./config.js";
 
 type CrawlerOptions = { max_depth?: number, max_pages?: number };
 type CrawlerCallback = ($: Crawled) => void;
@@ -100,11 +101,54 @@ export function crawler_url(url: string, base?: string): string | null {
  *
  * caso o link não seja para html, ou caso ocorra um erro, retorna uma string vazia */
 async function download_html(url: string | URL) {
-    let response = await fetch(url, { redirect: "follow" }).catch(e => (console.warn(e), null));
-    if (response == null) return "";
-    let mimetype = response.headers.get("Content-Type");
-    if (mimetype == null || mimetype.indexOf("text/html") == -1) return "";
-    if (response.status < 200 || response.status >= 300) return "";
-    console.log(response.status + ": " + url.toString());
-    return await response.text().catch(e => (console.warn(e), ""));
+    if (typeof url != "string") {
+        url = url.toString();
+    }
+
+    let cache_filename = null;
+
+    if (config.cache_expiration_ms > 0) {
+        cache_filename = config.cache_path + encodeURIComponent(url);
+        try {
+            let age_ms = 0;
+
+            if (config.cache_expiration_ms < Infinity) {
+                let stats = await fs.stat(cache_filename);
+                let now = new Date();
+                age_ms = now.getTime() - stats.mtime.getTime();
+            }
+
+            if (age_ms <= config.cache_expiration_ms) {
+                let html = await fs.readFile(cache_filename, "utf-8");
+                console.log("304: " + url);
+                return html;
+            }
+        } catch (e) {}
+    }
+
+    if (config.offline_mode) return "";
+
+    let html;
+
+    try {
+        let response = await fetch(url, { redirect: "follow" }).catch(e => (console.warn(e), null));
+        if (response == null) return "";
+    
+        let mimetype = response.headers.get("Content-Type");
+        if (mimetype == null || mimetype.indexOf("text/html") == -1) return "";
+        if (response.status < 200 || response.status >= 300) return "";
+    
+        console.log(response.status + ": " + url);
+    
+        html = await response.text().catch(e => (console.warn(e), ""));
+    } catch (e) {
+        html = null;
+        console.error("!!!: " + url, e);
+    }
+    if (cache_filename && typeof html === "string") {
+        fs.writeFile(cache_filename, html, "utf-8").catch(console.warn);
+    }
+    return html ?? "";
 }
+
+if (config.cache_expiration_ms > 0) fs.mkdir(config.cache_path, { recursive: true });
