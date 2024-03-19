@@ -1,7 +1,18 @@
 import { Crawled } from "./crawler.js";
 
+export type Indexed = {
+    // o object cheerio contendo a pagina
+    $: Crawled;
+    // o nome da pagina (o último segmento do caminho)
+    name: string;
+    // o número de links que apontam para essa página (excluindo auto links)
+    linked: number;
+    // o número auto links nesta página
+    self_link: number;
+};
+
 /** chama o crawler e conta os links entre as páginas */
-export function index(pages: Crawled[]) {
+export function index(pages: Crawled[]): Indexed[] {
 
     /** esse map relaciona cada link aos vários links que foram encontrados dentro dele
      *

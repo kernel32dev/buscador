@@ -1,0 +1,96 @@
+import { config } from "./config.js";
+import { Indexed } from "./indexer.js";
+
+export type Scored = Indexed & {
+    has_term: boolean,
+    score_linked: number,
+    score_self_link: number,
+    score_term: number,
+    score_term_on_title: number,
+    score_term_on_meta: number,
+    score_term_on_header1: number,
+    score_term_on_header2: number,
+    score_term_on_paragraph: number,
+    score_term_on_anchor: number,
+    score_date: number,
+    score_year_age: number,
+    score_total: number,
+};
+
+export function score(indexed: Indexed[], term: string): Scored[] {
+    return indexed.map(x => score_indexed_page(x, term)).sort((a, b) => b.score_total - a.score_total);
+}
+
+function score_indexed_page(page: Indexed, term: string): Scored {
+    let $ = page.$;
+    
+    let score_linked = page.linked * config.reward_linked;
+    let score_self_link = page.self_link * config.reward_self_link;
+
+    let title_text = $("title").get().map(x => $(x).prop("innerText")).join(" ");
+    let count_term_title = count_terms(title_text, term);
+    let score_term_on_title = count_term_title * config.reward_term_on_title;
+
+    let meta_text = $("meta").get().map(x => x.attribs["content"] ?? "").join(" ");
+    let count_term_meta = count_terms(meta_text, term);
+    let score_term_on_meta = count_term_meta * config.reward_term_on_meta;
+
+    let header1_text = $("h1").get().map(x => $(x).prop("innerText")).join(" ");
+    let score_term_on_header1 = count_terms(header1_text, term) * config.reward_term_on_header1;
+
+    let header2_text = $("h2").get().map(x => $(x).prop("innerText")).join(" ");
+    let score_term_on_header2 = count_terms(header2_text, term) * config.reward_term_on_header2;
+
+    let paragraph_text = $("p").get().map(x => $(x).prop("innerText")).join(" ");
+    let score_term_on_paragraph = count_terms(paragraph_text, term) * config.reward_term_on_paragraph;
+
+    let anchor_text = $("a").get().map(x => $(x).prop("innerText")).join(" ");
+    let score_term_on_anchor = count_terms(anchor_text, term) * config.reward_term_on_anchor;
+
+    let text = $("body").get().map(x => $(x).prop("innerText")).join(" ");
+    let count_term = count_terms(text, term) + count_term_title + count_term_meta;
+    let has_term = count_term > 0;
+    let score_term = count_term * config.reward_term;
+
+    // TODO! date
+    let score_date = 0 * config.reward_date;
+    let score_year_age = 0 * config.reward_year_age;
+
+    let score_total = score_linked + score_self_link + score_term + score_term_on_title + score_term_on_meta + score_term_on_header1 + score_term_on_header2 + score_term_on_paragraph + score_term_on_anchor + score_date + score_year_age;
+
+    return {
+        has_term,
+        score_linked,
+        score_self_link,
+        score_term,
+        score_term_on_title,
+        score_term_on_meta,
+        score_term_on_header1,
+        score_term_on_header2,
+        score_term_on_paragraph,
+        score_term_on_anchor,
+        score_date,
+        score_year_age,
+        score_total,
+        ...page
+    };
+}
+
+// TODO! revisar essa função do chat gpt
+function count_terms(text: string, term: string): number {
+    // Normalize both text and term to Unicode Normalization Form D (NFD)
+    const normalizedText = text.normalize("NFD");
+    const normalizedTerm = term.normalize("NFD");
+
+    // Remove accents by replacing accented characters with their non-accented counterparts
+    const regex = /[\u0300-\u036f]/g; // Matches combining diacritical marks
+    const cleanText = normalizedText.replace(regex, "");
+    const cleanTerm = normalizedTerm.replace(regex, "");
+
+    // Perform a case-insensitive search for the term
+    const regexTerm = new RegExp(cleanTerm, "gi");
+    const matches = cleanText.match(regexTerm);
+
+    // Return the number of matches found
+    return matches ? matches.length : 0;
+}

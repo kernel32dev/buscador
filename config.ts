@@ -2,6 +2,8 @@
 export const config: {
     /** quantos pontos uma página ganha por link apontando para ela */
     reward_linked: number,
+    /** quantos pontos uma página ganha por link dela apontando para ela mesma */
+    reward_self_link: number,
     /** quantos pontos uma página ganha por ocorrência do termo sendo buscado */
     reward_term: number,
     /** quantos pontos uma página ganha por ocorrência do termo sendo buscado, dentro de uma tag `<title>` */
@@ -16,8 +18,6 @@ export const config: {
     reward_term_on_paragraph: number,
     /** quantos pontos uma página ganha por ocorrência do termo sendo buscado, dentro de uma tag `<a>` */
     reward_term_on_anchor: number,
-    /** quantos pontos uma página ganha por link dela apontando para ela mesma */
-    reward_self_link: number,
     /** quantos pontos uma página ganha por disponibilizar uma data */
     reward_date: number,
     /** quantos pontos uma página ganha por ano de idade */
@@ -33,7 +33,7 @@ export const config: {
     /** o númer máximo de páginas que o crawler pode retornar */
     max_pages: number,
 } = {
-    reward_linked: 20,
+    reward_linked: 10,
     reward_self_link: -20,
     reward_term: 5,
     reward_term_on_title: 20,
