@@ -1,9 +1,7 @@
-import { CrawlerOptions, crawl } from "./crawler.js";
+import { Crawled } from "./crawler.js";
 
 /** chama o crawler e conta os links entre as páginas */
-export async function index(entry_point: string, options?: CrawlerOptions) {
-
-    let pages = await crawl(entry_point, options);
+export function index(pages: Crawled[]) {
 
     /** esse map relaciona cada link aos vários links que foram encontrados dentro dele
      *

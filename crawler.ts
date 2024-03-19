@@ -2,14 +2,6 @@ import { CheerioAPI, load } from "cheerio";
 import { promises as fs } from "fs";
 import { config } from "./config.js";
 
-/** as opções para a função crawl */
-export type CrawlerOptions = {
-    /** o nível máximo de profundidade que o crawler pode ir, o padrão é `Infinity` */
-    max_depth?: number,
-    /** o númer máximo de páginas que o crawler pode retornar, o padrão é `Infinity` */
-    max_pages?: number,
-};
-
 /** uma página dentro do resultado da função crawl, `Crawled` é um document da CheerioAPI com mais duas propiedades, `url` e `links` */
 export type Crawled = CheerioAPI & {
     /** o url que foi usado para obter essa página */
@@ -19,12 +11,10 @@ export type Crawled = CheerioAPI & {
 };
 
 /** obtem todas as páginas acessíveis a partir de um link */
-export async function crawl(url: string, options: CrawlerOptions = {}, depth: number = 0, pages: Crawled[] = [], found: Set<string> = new Set()) {
+export async function crawl(url: string, depth: number = 0, pages: Crawled[] = [], found: Set<string> = new Set()) {
 
-    // analiza as opções
-    let max_depth = options.max_depth ?? Infinity;
-    let max_pages = options.max_pages ?? Infinity;
-    if (max_depth == 0 || max_pages == 0) return pages;
+    // caso os limites não sejam positivos, faz nada 
+    if (config.max_depth <= 0 || config.max_pages <= 0) return pages;
 
     let processed_url = normalize_url(url);
     if (processed_url === null) return pages;
@@ -37,7 +27,7 @@ export async function crawl(url: string, options: CrawlerOptions = {}, depth: nu
     found.add(url);
 
     // evita fazer o request se o limite de páginas já foi atingido
-    if (pages.length >= max_pages) return pages;
+    if (pages.length >= config.max_pages) return pages;
 
     // baixa o html
     let html = await download_html(url);
@@ -46,7 +36,7 @@ export async function crawl(url: string, options: CrawlerOptions = {}, depth: nu
     if (html == "") return pages;
 
     // ignora a página se o limite de páginas já foi atingido
-    if (pages.length >= max_pages) return pages;
+    if (pages.length >= config.max_pages) return pages;
 
     // parsa o html
     let document = load(html, {}, true);
@@ -65,8 +55,8 @@ export async function crawl(url: string, options: CrawlerOptions = {}, depth: nu
 
     // recursivamente trata todos os links e espera eles terminarem
     // mas apenas se a profundidade deixar
-    if (depth < max_depth) {
-        await Promise.all(links.map(x => crawl(x, options, depth + 1, pages, found)));
+    if (depth < config.max_depth) {
+        await Promise.all(links.map(x => crawl(x, depth + 1, pages, found)));
     }
 
     return pages;

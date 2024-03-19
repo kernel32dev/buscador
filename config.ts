@@ -28,6 +28,10 @@ export const config: {
     cache_expiration_ms: number,
     /** modo offline, apenas ler do cache, nunca fazer nenhum request */
     offline_mode: boolean,
+    /** o nível máximo de profundidade que o crawler pode ir */
+    max_depth: number,
+    /** o númer máximo de páginas que o crawler pode retornar */
+    max_pages: number,
 } = {
     reward_linked: 20,
     reward_self_link: -20,
@@ -43,4 +47,6 @@ export const config: {
     cache_path: './cache/',
     cache_expiration_ms: 1000 * 60 * 60, // 1 hora
     offline_mode: false,
+    max_depth: 4,
+    max_pages: 200,
 };
