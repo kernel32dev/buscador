@@ -19,7 +19,7 @@ export type Scored = Indexed & {
 
 /** calcula a pontuação das páginas indexadas e retorna as páginas pontuadas ordenadas da maior pontuação total até a menor */
 export function score(indexed: Indexed[], term: string): Scored[] {
-    return indexed.map(x => score_indexed_page(x, normalize(term))).sort((a, b) => b.score_total - a.score_total);
+    return indexed.map(x => score_indexed_page(x, normalize(term))).sort((a, b) => +b.has_term - +a.has_term || b.score_total - a.score_total);
 }
 
 /** calcula a pontuação de uma página indexada, o parâmetro term deve já estar normalizado */

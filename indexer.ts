@@ -44,7 +44,7 @@ export function index(pages: Crawled[]): Indexed[] {
             // o object cheerio contendo a pagina
             $,
             // o nome da pagina (o último segmento do caminho)
-            name: $.url.substring($.url.lastIndexOf("/") + 1),
+            name: $.url.substring($.url.lastIndexOf("/") + 1) || $.url.substring($.url.lastIndexOf("/", $.url.length - 2) + 1).slice(0, -1),
             // o número de links que apontam para essa página (excluindo auto links)
             linked: (backlinks.get($.url) ?? []).filter(x => x != $.url).length,
             // o número auto links nesta página

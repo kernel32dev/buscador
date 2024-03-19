@@ -5,6 +5,7 @@ import { crawl } from "./crawler.js";
 import { score } from "./scorer.js";
 
 const entry_point = "https://kernel32dev.github.io/hosp-pi/matrix.html";
+//const entry_point = "https://starbuzzcoffee.com/";
 //const entry_point = "https://iep.utm.edu/";
 //const entry_point = "https://sites.google.com/site/steveyegge2/singleton-considered-stupid";
 //const entry_point = "https://sites.google.com/site/steveyegge2/home";
@@ -13,6 +14,12 @@ const entry_point = "https://kernel32dev.github.io/hosp-pi/matrix.html";
 async function main() {
     console.clear();
 
+    console.log("buscador");
+    console.log();
+    console.log("Germano Barbosa");
+    console.log("Marcos Araújo");
+    console.log("Gabriel Souza");
+    console.log();
     console.log("a raiz da busca é " + entry_point);
     console.log("a profundidade máxima é " + config.max_depth);
     console.log("a máximo de paginas é " + config.max_pages);
@@ -32,6 +39,10 @@ async function main() {
     // calcula os pontos de cada página
     let scored = score(indexed, term);
 
+    // mostra os links em ordem de relevância
+    console.log(scored.map((x, i) => `(${i}): ${x.$.url}`).join('\n'));
+
+    // mostra a tabela detalhando tudo
     let table = scored.map(x => ({
         name: x.name,
         autoridade: x.score_linked,
