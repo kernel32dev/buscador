@@ -52,9 +52,13 @@ function score_indexed_page(page: Indexed, term: string): Scored {
     let has_term = count_term > 0;
     let score_term = count_term * config.reward_term;
 
-    // TODO! date
-    let score_date = 0 * config.reward_date;
-    let score_year_age = 0 * config.reward_year_age;
+    let now = new Date();
+    let date = find_date(text);
+
+    if (date && date.getTime() > now.getTime()) date = null;
+
+    let score_date = date ? config.reward_date : 0;
+    let score_year_age = date ? (now.getFullYear() - date.getFullYear()) * config.reward_year_age : 0;
 
     let score_total = score_linked + score_self_link + score_term + score_term_on_title + score_term_on_meta + score_term_on_header1 + score_term_on_header2 + score_term_on_paragraph + score_term_on_anchor + score_date + score_year_age;
 
@@ -93,4 +97,20 @@ function count_terms(text: string, term: string): number {
 
     // Return the number of matches found
     return matches ? matches.length : 0;
+}
+
+function find_date(text: string): Date | null {
+    let date_matches = text.match(/\d{1,4}[-\/\\]\d{1,2}[-\/\\]\d{1,4}/g);
+    for (let date_match of date_matches ?? []) {
+        let component_matches = date_match.match(/\d+/g);
+        if (component_matches === null || component_matches.length != 3) continue;
+        let [a, b, c] = component_matches.map(Number) as [number, number, number];
+        try {
+            if (a >= 1000 && a <= 9999 && b <= 12 && c <= 31) return new Date(`${a}-${b}-${c}`);
+            if (c >= 1000 && c <= 9999 && b <= 12 && a <= 31) return new Date(`${c}-${b}-${a}`);
+            if (a > 31 && a <= 99 && b <= 12 && c <= 31) return new Date(`19${a}-${b}-${c}`);
+            if (c > 31 && c <= 99 && b <= 12 && a <= 31) return new Date(`19${c}-${b}-${a}`);
+        } catch (e) {}
+    }
+    return null;
 }
