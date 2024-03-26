@@ -39,6 +39,8 @@ async function main() {
     // calcula os pontos de cada página
     let scored = score(indexed, term);
 
+    console.log("\n=== RESULTADO DA PESQUISA ===\n");
+
     // mostra os links em ordem de relevância
     console.log(scored.map((x, i) => `(${i}): ${x.$.url}`).join('\n'));
 

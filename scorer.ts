@@ -89,13 +89,10 @@ function normalize(text: string): string {
 
 /** conta quantas vezes term aparece em text */
 function count_terms(text: string, term: string): number {
-    let i = -1;
-    let count = 0;
-    while (true) {
-        i = text.indexOf(term, i + 1);
-        if (i == -1) return count;
-        count++;
-    }
+    let escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let term_regex = new RegExp("\\b" + escaped + "\\b", 'uig');
+    let matches = text.match(term_regex);
+    return matches ? matches.length : 0;
 }
 
 /** encontra e retorna a primeira data em text */
